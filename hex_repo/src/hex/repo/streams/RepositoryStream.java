@@ -170,7 +170,7 @@ public class RepositoryStream<T> extends AbstractQuery<T> implements Stream<T> {
      * this stream with the contents of a mapped stream produced by applying
      * the provided mapping function to each element.
      *
-     * This is effectively this is an inner join to a one-to-many relationship in a
+     * This is effectively an inner join to a one-to-many relationship in a
      * relational database.
      * <p>
      * <p>This is an <a href="package-summary.html#StreamOps">intermediate
@@ -439,5 +439,24 @@ public class RepositoryStream<T> extends AbstractQuery<T> implements Stream<T> {
         RepositoryStream<T> dup = duplicate();
         dup.orderBy = null;
         return dup;
+    }
+
+    /**
+     * Converts this stream into an update statement that makes the changes caused by
+     * {@code updateDescriptor} to the records currently described by this {@link RepositoryStream}.
+     * @param updateDescriptor A consumer that describes the changes to be made
+     */
+    public void update(Consumer<T> updateDescriptor) {
+
+    }
+
+    /**
+     * Update the record {@code t} if it exists with all the values found in {@code t}.
+     * @param t Record values to save to the database
+     * @throws hex.repo.RepositoryException If the record does not exist or an error occurred during update
+     */
+    public void update(T t) {
+        // use the metadata to generate the update statement
+        // create a query generating class similar to SqlQuery. Use dialects wherever possible (i.e.: everywhere)
     }
 }

@@ -1,21 +1,22 @@
 package hex.repo;
 
+import hex.ql.Query;
+import hex.ql.Queryable;
 import hex.ql.ast.InvalidAstException;
+import hex.ql.ast.predicates.EqualityPredicate;
 import hex.repo.metadata.DataMappingException;
 import hex.repo.metadata.Metadata;
 import hex.repo.sql.PreparedSqlQuery;
 import hex.repo.streams.RepositoryStream;
-import hex.ql.Queryable;
-import hex.ql.ast.predicates.EqualityPredicate;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Created by jason on 14-11-05.
@@ -57,6 +58,23 @@ public abstract class AbstractRepository<T> implements Repository<T>, Queryable<
 
     public List<T> executeQuery(PreparedSqlQuery query) {
         return executeQuery(query, ResultSetMapper.toList(get_metadata()::mapRecord));
+    }
+
+    @Override
+    public void update(Query<T> queryToUpdate, Consumer<T> updateDescriptor) {
+        if(queryToUpdate instanceof RepositoryStream) {
+            ((RepositoryStream<T>) queryToUpdate).update(updateDescriptor);
+        } else {
+            // TODO: Log INFO about performance of this
+            queryToUpdate.forEach(updateDescriptor.andThen(this::update));
+        }
+    }
+
+    @Override
+    public void update(T t) {
+        Function<T, Integer> primaryKey = get_metadata().getPrimaryKey();
+        RepositoryStream<T> stream = (RepositoryStream<T>) stream().where(primaryKey, new EqualityPredicate<>(primaryKey.apply(t)));
+        stream.update(t);
     }
 
     @Override
